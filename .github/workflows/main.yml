@@ -2,31 +2,34 @@ name: 4-Day Job Search
 
 on:
   schedule:
-    - cron: '0 0 */4 * *' # Runs every 4 days at midnight
-  workflow_dispatch: # Allows manual triggering
+    - cron: '0 0 */4 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-
       - name: Install dependencies
         run: pip install python-jobspy pandas openpyxl
-
-      - name: Run Scraper
+      - name: Run Scraper and Email
+        env:
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: python job_search_automation.py
-
-      - name: Commit and Push Report
+      - name: Commit Report
         run: |
           git config --global user.name 'GitHub Action'
           git config --global user.email 'action@github.com'
           git add Latest_Job_Report.xlsx
-          git commit -m "Update Job Report $(date)"
+          git commit -m "Update Job Report $(date)" || echo "No changes to commit"
           git push
