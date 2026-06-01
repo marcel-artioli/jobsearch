@@ -1,0 +1,32 @@
+name: 4-Day Job Search
+
+on:
+  schedule:
+    - cron: '0 0 */4 * *' # Runs every 4 days at midnight
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install python-jobspy pandas openpyxl
+
+      - name: Run Scraper
+        run: python job_search_automation.py
+
+      - name: Commit and Push Report
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add Latest_Job_Report.xlsx
+          git commit -m "Update Job Report $(date)"
+          git push
